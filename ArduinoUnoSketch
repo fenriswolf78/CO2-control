@@ -1,0 +1,17 @@
+/*
+Description: 	Code for an Arduino UNO / Elegoo UNO R3 to control:
+				2x CO2 sensors on pin A1 and A2
+				1x temperature & humidity sensor on pin A0
+				1x 16x4 LCD display on A4, A5
+				1x photoresistor(photocell on pin 12
+				2x relay 5v 230v on pin 7 (k2), pin 8 (k1)
+        2x green led
+Author: 		Fenriswolf
+Version/Date: 	V0.1/2017.05.15
+*/
+
+// initalize libraries
+#include <Wire.h> //for display
+#include <LiquidCrystal_I2C.h> //for display
+#include <SimpleDHT.h> //for DHT11 temperature humidity sensor
+
