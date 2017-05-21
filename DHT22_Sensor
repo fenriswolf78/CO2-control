@@ -49,6 +49,7 @@ void compareTempHumid()
     if(humid1 >= humid2/100*95 || humid1 <= humid2/100*105)
     {
       //here code for display line 1 temperatur line 2 humidity
+      //!!!actual code only for test!!!
       Serial.print("Humidity: "); 
       Serial.print((humid1+humid2)/2);
       Serial.print(" %\t");
@@ -59,6 +60,7 @@ void compareTempHumid()
     else
     {
       //here code for display line 1 temperatur line 2 humidity
+      //!!!actual code only for test!!!
       Serial.print("ABWEICHUNG VON ÜBER 5%!!! ");
       Serial.print("Humidity: "); 
       Serial.print((humid1+humid2)/2);
