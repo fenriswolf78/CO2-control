@@ -1,0 +1,192 @@
+/*
+Code for:
+<<=========================>>
+Standard photocell
+used PIN 12
+PIN 1	connect to VCC 5V
+PIN 2	connect to DATA Port + 10kOhm resistor to GND port
+<<=========================>>
+measurement for DHT22 Sensor
+used PIN A0, GND, VCC 5V
+Output signal:    single bus
+measuring range:  humidity 0-100% (+-2%)
+                  temperature -40°C - 80°C (-+0.2°C)
+sensing period:   ~ 2 seconds
+Pins on module from left 
+PIN 1   connect to VCC port from 3.3-6.0VDC
+PIN 2   connect to DATA port + 1kOhm resistor to VCC port
+PIN 3   NULL
+PIN 4   connect to GND port
+<<=========================>>
+the 4 lines 20 cols LCD Display from Sunfounder.com
+used PIN A4(SDA), PIN A5(SDC), GND, VCC 5V
+Pins on module from upon 
+PIN 1   GND
+PIN 2   VCC 5.0 VDC (-+0.1)
+PIN 3   SDA (data line)
+PIN 4   SDC (clock line)
+<<=========================>>
+2x 5 V DC to 230V AC relais
+
+<<=========================>>
+Author:   Fenriswolf
+Version:  V0.8 2017.05.22 15:03
+<<=========================>>
+*/
+
+//initalize library
+#include <Adafruit_Sensor.h> //Adafruit_Sensor-master.zip
+#include <DHT.h> //DHT22-04.zip
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+//define readpin and module 
+#define DHTPIN A0 //set analog pin 0 to read data
+#define DHTTYPE DHT22 //we use a HDT22 wodule without board
+#define photocell = 12;
+//#define k1 = 7;//relais1 magnetic valve
+//#define k2 = 8;//relais2 ventilation
+
+//rename module to 
+DHT dht(DHTPIN, DHTTYPE);
+
+//variables
+float humid1 = 0;
+float temp1 = 0;
+float humid2 = 0;
+float temp2 = 0;
+LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 20 chars and 4 line display
+int phcValue = 0;//define photocell value
+boolean light = true;//define boolean light status true = on false = off
+
+void setup()
+{
+  Serial.begin(9600);
+  lcd.init();  //initialize the lcd
+  lcd.backlight();  //open the backlight
+  //pinMode(k1, OUTPUT);
+  //pinMode(k2, OUTPUT);
+}
+
+void line0()//code for display line 1 temperatur
+{
+  lcd.setCursor(0,0);
+  lcd.print("                    ");
+  lcd.setCursor(0,0); 
+  lcd.print("Temperature");
+  lcd.setCursor(14,0);
+  lcd.print((temp1+temp2)/2);
+  lcd.setCursor(18,0);
+  lcd.print(" C");
+}
+
+void line1()
+{
+  lcd.setCursor(0,1);
+  lcd.print("                    ");
+  lcd.setCursor(0,1);
+  lcd.print("Humidity");
+  lcd.setCursor(14,1);
+  lcd.print((humid1+humid2)/2);
+  lcd.setCursor(18,1);
+  lcd.print(" %");
+}
+
+void line2()
+{
+  lcd.setCursor(0,2);
+  lcd.print("                    ");
+  lcd.setCursor(0,2);
+  lcd.print("CO2 Value:");
+  lcd.setCursor(12,2);
+  lcd.print("0000");
+  lcd.setCursor(17,2);
+  lcd.print("ppm");
+}
+
+void line3()
+{
+  lcd.setCursor(0,3);
+  lcd.print("                    ");
+  lcd.setCursor(0,3);
+  lcd.print("CO2 GAS ");
+  lcd.setCursor(8,3);
+  lcd.print("ON");
+  lcd.setCursor(12,3);
+  lcd.print("Vent");
+  lcd.setCursor(17,3);
+  lcd.print("OFF");
+}
+
+void compareTempHumid()
+{
+  humid1 = dht.readHumidity();//set value for humidity on humid1
+  temp1 = dht.readTemperature();//set value for temperature on temp1
+  delay(5000);//wait 5 seconds to second measurement
+  humid2 = dht.readHumidity();//set value for humidity on humid2
+  temp2 = dht.readTemperature();//set value for temperature on temp2
+  if (!isnan(temp1) || !isnan(humid1) || !isnan(temp2) || !isnan(humid2))
+  {
+    if(humid1 >= humid2/100*95 || humid1 <= humid2/100*105)
+    {
+      line0(); //code for display line 1 temperatur line 2 humidity
+      line1();
+      /*!!! following code only for test in serial monitor!!!
+      Serial.print("Humidity: "); 
+      Serial.print((humid1+humid2)/2);
+      Serial.print(" %\t");
+      Serial.print("Temperature: "); 
+      Serial.print((temp1+temp2)/2);
+      Serial.println(" °C");*/
+    }
+    else
+    {
+      lcd.setCursor(0,0); //code for display line 1 temperatur line 2 humidity
+      lcd.print("DEVIATION > 5%!!!");
+      line0();
+      line1();
+      /*!!! following code only for test in serial monitor!!!
+      Serial.print("DEVIATION > 5%!!! ");
+      Serial.print("Humidity: "); 
+      Serial.print((humid1+humid2)/2);
+      Serial.print(" %\t");
+      Serial.print("Temperature: "); 
+      Serial.print((temp1+temp2)/2);
+      Serial.println(" °C");*/
+    }
+  }
+  else
+  {
+    lcd.clear();//code for display sensorerror
+    lcd.setCursor(0,0);
+    lcd.print("Sensorerror => DHT22");
+    lcd.setCursor(0,1);
+    lcd.print(" no data avaliable  ");
+    //Serial.println("Sensorerror => DHT22 was not able to deliver values");
+  }
+  delay(2000);
+}
+
+void co2()
+{
+  line2();
+  line3();
+}
+
+void loop()
+{
+  if(light == true)
+  {
+    lcd.backlight();
+    compareTempHumid();
+    co2();
+    delay(30000);
+  }
+  else
+  {
+    lcd.noBacklight();
+    compareTempHumid();
+    co2();
+    delay(30000);
+  }
+}
