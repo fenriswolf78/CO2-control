@@ -1,0 +1,64 @@
+/*
+Code for messurement for 2 x MQ135 Sensor with backup fuction
+used PIN A1, PIN A2, GND, VCC 5V
+Output signal:    analog or digital bus
+measuring range:  10 - 2000ppm
+!!IMPORTANT 24 hours preheat time
+sensing period:   ~ 2 seconds
+Pins on module from left 
+PIN 1   VCC 5.0 VDC (-+0.1)
+PIN 2   GND
+PIN 3   Digital DATA
+PIN 4   Analog DATA (we use that)
+
+Author:   Fenriswolf
+Version:  V0.1 2017.05.22
+*/
+
+/*
+Code for messurement for 2 x MQ135 Sensor with backup fuction
+used PIN A1, PIN A2, GND, VCC 5V
+Output signal:    analog or digital bus
+measuring range:  10 - 2000ppm
+!!IMPORTANT 24 hours preheat time
+sensing period:   ~ 2 seconds
+Pins on module from left 
+PIN 1   VCC 5.0 VDC (-+0.1)
+PIN 2   GND
+PIN 3   Digital DATA
+PIN 4   Analog DATA (we use that)
+
+Author:   Fenriswolf
+Version:  V0.1 2017.05.22
+*/
+
+//initalize library
+#include <MQ135.h>
+
+//define readpin and module
+#define MQ135_1PIN A1 //set analog pin 1 to read data
+//#define MQ135_2PIN A2 //set analog pin 2 to read data
+#define MQ135TYPE MQ135
+
+//rename module to
+MQ135 co2_1(MQ135_1PIN, MQ135TYPE);
+MQ135 co2_2(MQ135_2PIN, MQ135TYPE);  <<====SOME SORT OF ERROR
+
+//variables
+int co2_1 = 0;
+int co2_2 = 0;
+
+void setup()
+{
+  Serial.begin(9600);
+}
+
+void co2M()
+{
+
+}
+
+void loop() 
+{
+  
+}
