@@ -15,38 +15,22 @@ Author:   Fenriswolf
 Version:  V0.1 2017.05.22
 */
 
-/*
-Code for messurement for 2 x MQ135 Sensor with backup fuction
-used PIN A1, PIN A2, GND, VCC 5V
-Output signal:    analog or digital bus
-measuring range:  10 - 2000ppm
-!!IMPORTANT 24 hours preheat time
-sensing period:   ~ 2 seconds
-Pins on module from left 
-PIN 1   VCC 5.0 VDC (-+0.1)
-PIN 2   GND
-PIN 3   Digital DATA
-PIN 4   Analog DATA (we use that)
-
-Author:   Fenriswolf
-Version:  V0.1 2017.05.22
-*/
-
 //initalize library
 #include <MQ135.h>
 
 //define readpin and module
 #define MQ135_1PIN A1 //set analog pin 1 to read data
-//#define MQ135_2PIN A2 //set analog pin 2 to read data
-#define MQ135TYPE MQ135
+#define MQ135_2PIN A2 //set analog pin 2 to read data
+float airthreshold[3] = {
+  400, 400, 800};
 
 //rename module to
-MQ135 co2_1(MQ135_1PIN, MQ135TYPE);
-MQ135 co2_2(MQ135_2PIN, MQ135TYPE);  <<====SOME SORT OF ERROR
+MQ135 co2_1 = MQ135 (MQ135_1PIN);
+MQ135 co2_2 = MQ135 (MQ135_2PIN);
 
 //variables
-int co2_1 = 0;
-int co2_2 = 0;
+float ppmValue1 = 0;
+float ppmValue2 = 0;
 
 void setup()
 {
@@ -55,10 +39,24 @@ void setup()
 
 void co2M()
 {
-
+  ppmValue1 = co2_1.getPPM();
+  ppmValue2 = co2_2.getPPM();
+  if(ppmValue1 >= ppmValue2*0.95 || ppmValue1 <= ppmValue2*1.05)
+  {
+    //!!! following code only for test in serial monitor!!!
+      Serial.print("CO2_1: ");
+      Serial.print(ppmValue1);
+      Serial.print(" CO2_2: ");
+      Serial.print(ppmValue2);
+      Serial.print(" CO2mix: ");
+      Serial.print((ppmValue1+ppmValue2)/2);
+      Serial.println(" ppm");
+      delay(2000);
+  }
 }
+
 
 void loop() 
 {
-  
+  co2M();
 }
