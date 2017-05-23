@@ -26,6 +26,18 @@ PIN 2   VCC 5.0 VDC (-+0.1)
 PIN 3   SDA (data line)
 PIN 4   SDC (clock line)
 <<=========================>>
+messurement for 2 x MQ135 Sensor with backup fuction
+used PIN A1, PIN A2, GND, VCC 5V
+Output signal:    analog or digital bus
+measuring range:  10 - 2000ppm
+!!IMPORTANT 24 hours preheat time
+sensing period:   ~ 2 seconds
+Pins on module from left 
+PIN 1   VCC 5.0 VDC (-+0.1)
+PIN 2   GND
+PIN 3   Digital DATA
+PIN 4   Analog DATA (we use that)
+<<=========================>>
 2x 5 V DC to 230V AC relais
 
 <<=========================>>
@@ -39,16 +51,21 @@ Version:  V0.8 2017.05.22 15:03
 #include <DHT.h> //DHT22-04.zip
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
+#include <MQ135.h>
 
 //define readpin and module 
 #define DHTPIN A0 //set analog pin 0 to read data
 #define DHTTYPE DHT22 //we use a HDT22 wodule without board
 #define photocell = 12;
+#define MQ135_1PIN A1 //set analog pin 1 to read data
+#define MQ135_2PIN A2 //set analog pin 2 to read data
 //#define k1 = 7;//relais1 magnetic valve
 //#define k2 = 8;//relais2 ventilation
 
 //rename module to 
 DHT dht(DHTPIN, DHTTYPE);
+MQ135 co2_1 = MQ135 (MQ135_1PIN);
+MQ135 co2_2 = MQ135 (MQ135_2PIN);
 
 //variables
 float humid1 = 0;
@@ -58,6 +75,9 @@ float temp2 = 0;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 20 chars and 4 line display
 int phcValue = 0;//define photocell value
 boolean light = true;//define boolean light status true = on false = off
+float airthreshold[3] = {400, 400, 800};
+float ppmValue1 = 0;
+float ppmValue2 = 0;
 
 void setup()
 {
@@ -99,7 +119,7 @@ void line2()
   lcd.setCursor(0,2);
   lcd.print("CO2 Value:");
   lcd.setCursor(12,2);
-  lcd.print("0000");
+  lcd.print((ppmValue1+ppmValue2)/2);
   lcd.setCursor(17,2);
   lcd.print("ppm");
 }
@@ -169,8 +189,22 @@ void compareTempHumid()
 
 void co2()
 {
-  line2();
-  line3();
+  ppmValue1 = co2_1.getPPM();
+  ppmValue2 = co2_2.getPPM();
+  if(ppmValue1 >= ppmValue2*0.95 || ppmValue1 <= ppmValue2*1.05)
+  {
+    line2();
+    line3();
+    /*!!! following code only for test in serial monitor!!!
+    Serial.print("CO2_1: ");
+    Serial.print(ppmValue1);
+    Serial.print(" CO2_2: ");
+    Serial.print(ppmValue2);
+    Serial.print(" CO2mix: ");
+    Serial.print((ppmValue1+ppmValue2)/2);
+    Serial.println(" ppm");*/
+    delay(2000);
+  }
 }
 
 void loop()
