@@ -1,10 +1,10 @@
 /*
 Code for:
 <<=========================>>
-Standard photocell
-used PIN 12
-PIN 1	connect to VCC 5V
-PIN 2	connect to DATA Port + 10kOhm resistor to GND port
+Standard 2x photocell
+used PIN 7, PIN 8
+PIN 1  connect to VCC 5V
+PIN 2 connect to DATA Port + 10kOhm resistor to GND port
 <<=========================>>
 measurement for DHT22 Sensor
 used PIN A0, GND, VCC 5V
@@ -20,7 +20,7 @@ PIN 4   connect to GND port
 <<=========================>>
 the 4 lines 20 cols LCD Display from Sunfounder.com
 used PIN A4(SDA), PIN A5(SDC), GND, VCC 5V
-Pins on module from upon 
+Pins on module from upon
 PIN 1   GND
 PIN 2   VCC 5.0 VDC (-+0.1)
 PIN 3   SDA (data line)
@@ -42,7 +42,7 @@ PIN 4   Analog DATA (we use that)
 
 <<=========================>>
 Author:   Fenriswolf
-Version:  V0.8 2017.05.22 15:03
+Version:  V0.8 2017.05.25 18:56
 <<=========================>>
 */
 
@@ -56,11 +56,10 @@ Version:  V0.8 2017.05.22 15:03
 //define readpin and module 
 #define DHTPIN A0 //set analog pin 0 to read data
 #define DHTTYPE DHT22 //we use a HDT22 wodule without board
-#define photocell = 12;
 #define MQ135_1PIN A1 //set analog pin 1 to read data
 #define MQ135_2PIN A2 //set analog pin 2 to read data
-//#define k1 = 7;//relais1 magnetic valve
-//#define k2 = 8;//relais2 ventilation
+#define k1 = 7;//relais1 magnetic valve
+#define k2 = 8;//relais2 ventilation
 
 //rename module to 
 DHT dht(DHTPIN, DHTTYPE);
@@ -68,22 +67,29 @@ MQ135 co2_1 = MQ135 (MQ135_1PIN);
 MQ135 co2_2 = MQ135 (MQ135_2PIN);
 
 //variables
+int photocell_1 = 7;//rename digital pin 7 to photocell_1
+int photocell_2 = 8;//rename digital pin 8 to photocell_2
+int phcValue_1 = 0;//define photocell_1 value
+int phcValue_2 = 0;//define photocell_2 value
+int phcValue = 0;//define photocell value
+boolean light = false;//define first value for light on or off
 float humid1 = 0;
 float temp1 = 0;
 float humid2 = 0;
 float temp2 = 0;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 20 chars and 4 line display
-int phcValue = 0;//define photocell value
-boolean light = true;//define boolean light status true = on false = off
 float airthreshold[3] = {400, 400, 800};
 float ppmValue1 = 0;
 float ppmValue2 = 0;
+float ppmValue = 0;
 
 void setup()
 {
   Serial.begin(9600);
   lcd.init();  //initialize the lcd
   lcd.backlight();  //open the backlight
+  pinMode(photocell_1 , INPUT);
+  pinMode(photocell_2 , INPUT);
   //pinMode(k1, OUTPUT);
   //pinMode(k2, OUTPUT);
 }
@@ -136,6 +142,22 @@ void line3()
   lcd.print("Vent");
   lcd.setCursor(17,3);
   lcd.print("OFF");
+}
+
+void lightState()
+{
+  phcValue_1 = digitalRead(photocell_1);
+  delay (500);
+  phcValue_2 = digitalRead(photocell_2);
+  phcValue = (phcValue_1+phcValue_2)/2;
+  if(phcValue >= 500)
+  {
+    light = true;
+  }
+  else
+  {
+    light = false;
+  }
 }
 
 void compareTempHumid()
@@ -191,6 +213,7 @@ void co2()
 {
   ppmValue1 = co2_1.getPPM();
   ppmValue2 = co2_2.getPPM();
+  ppmValue = (ppmValue1 + ppmValue2)/2;
   if(ppmValue1 >= ppmValue2*0.95 || ppmValue1 <= ppmValue2*1.05)
   {
     line2();
@@ -209,6 +232,7 @@ void co2()
 
 void loop()
 {
+  lightState();
   if(light == true)
   {
     lcd.backlight();
