@@ -1,0 +1,33 @@
+int photocell_1 = 7; //set PIN 7 for the first photocell
+int photocell_2 = 8; //set PIN 8 for the first photocell
+int phcValue_1 = 0; //define photocell_1 value
+int phcValue_2 = 0; //define photocell_2 value
+int phcValue = 0; //define photocell value
+boolean light = false; //initalize and set boolean value for light off
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(photocell_1 , INPUT); //define photocell_1 PIN as input 
+  pinMode(photocell_2 , INPUT); //define photocell_2 PIN as input
+}
+
+void lightState()
+{
+  phcValue_1 = digitalRead(photocell_1); //set phcValue_1
+  delay (500); //wait 0.5 seconds
+  phcValue_2 = digitalRead(photocell_2); //set phcValue_2
+  phcValue = (phcValue_1+phcValue_2)/2; //set phcValue 
+  if(phcValue >= 500) //if phcValue is bigger then 500 light is on else light is off
+  {
+    light = true;
+  }
+  else
+  {
+    light = false;
+  }
+}
+
+void loop() 
+{
+  lightState(); //activate methode
+}
