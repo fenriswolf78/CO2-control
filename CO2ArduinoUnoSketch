@@ -100,6 +100,7 @@ void setup()
 
 void line0() //code for display line 1 temperatur
 {
+  
   lcd.setCursor(0,0);
   lcd.print("                    "); //clear line1
   lcd.setCursor(0,0); 
@@ -186,22 +187,6 @@ void lightState()
   else
   {
     light = false;
-  }
-}
-
-void relaisK1Active()
-{
-  if(ppmValue >= 1950 || isnan(ppmValue))
-  {
-    relayK1 = false;
-  }
-  else if(ppmValue <= 400)
-  {
-    relayK1 = true;
-  }
-  else if(ppmValue >= 900)
-  {
-    relayK1 = false;
   }
 }
 
@@ -305,6 +290,7 @@ void relayK1Active()
     Serial.print("ppm   valve:   ");
     Serial.println("OFF");*/
   }
+  
 }
 
 void relayK2Active()
