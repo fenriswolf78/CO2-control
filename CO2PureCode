@@ -46,14 +46,14 @@ Version:  V0.8 2017.05.25 18:56
 <<=========================>>
 */
 
-//initalize library
+// <<===== initalize library =====>>
 #include <Adafruit_Sensor.h> //Adafruit_Sensor-master.zip
 #include <DHT.h> //DHT22-04.zip
 #include <Wire.h> //I2C library
 #include <LiquidCrystal_I2C.h> //LCD library
 #include <MQ135.h> //gas sensor library
 
-//define readpin and module 
+// <<===== define readpin and module =====>>
 #define DHTPIN A0 //set analog pin 0 to read data
 #define DHTTYPE DHT22 //we use a HDT22 wodule without board
 #define MQ135_1PIN A1 //set analog pin 1 to read data
@@ -61,12 +61,12 @@ Version:  V0.8 2017.05.25 18:56
 int k1 = 7; //relais1 magnetic valve
 int k2 = 8; //relais2 ventilation
 
-//rename module to 
+// <<===== rename module to =====>>
 DHT dht(DHTPIN, DHTTYPE);
 MQ135 co2_1 = MQ135 (MQ135_1PIN); //set name for first co2 module to co2_1
 MQ135 co2_2 = MQ135 (MQ135_2PIN); //set name for second co2 module to co2_2
 
-//variables
+// <<===== variables =====>>
 int photocell_1 = 7; //rename digital pin 7 to photocell_1
 int photocell_2 = 8; //rename digital pin 8 to photocell_2
 int phcValue_1 = 0; //define photocell_1 value
@@ -87,6 +87,7 @@ float ppmValue = 0; //initalize compared humidity measurement
 boolean relayK1 = false; //relay1 magnetic valve
 boolean relayK2 = false; //relay2 ventilation
 
+//<<=========================>>
 void setup()
 {
   Serial.begin(9600);
@@ -96,6 +97,67 @@ void setup()
   pinMode(photocell_2 , INPUT); //define photocell_2 PIN as input
   pinMode(k1, OUTPUT);
   pinMode(k2, OUTPUT);
+}
+
+void lightState()
+{
+  phcValue_1 = digitalRead(photocell_1);
+  delay (500);
+  phcValue_2 = digitalRead(photocell_2);
+  phcValue = (phcValue_1+phcValue_2)/2;
+  if (!isnan(phcValue_1) || !isnan(phcValue_2))
+  {
+    if(phcValue >= 500)
+    {
+      light = true;
+    }
+    else
+    {
+      light = false;
+    }
+  }
+  else if(phcValue < 500)
+  {
+    light = true;
+  }
+  else
+  {
+    light = false;
+  }
+}
+
+void compareTempHumid()
+{
+  humid1 = dht.readHumidity();//set value for humidity on humid1
+  temp1 = dht.readTemperature();//set value for temperature on temp1
+  delay(5000);//wait 5 seconds to second measurement
+  humid2 = dht.readHumidity();//set value for humidity on humid2
+  temp2 = dht.readTemperature();//set value for temperature on temp2
+  humid = (humid1+humid2)/2;
+  temp = (temp1+temp2)/2;
+  if (!isnan(temp1) || !isnan(humid1) || !isnan(temp2) || !isnan(humid2))
+  {
+    if(humid1 >= humid2/100*95 || humid1 <= humid2/100*105)
+    {
+      line0(); //code for display line 1 temperatur line 2 humidity
+      line1();
+    }
+    else
+    {
+      lcd.setCursor(0,0); //code for display line 1 temperatur line 2 humidity
+      lcd.print("DEVIATION > 5%!!!");
+      line0();
+      line1();
+    }
+  }
+  else
+  {
+    lcd.clear(); //code for display sensorerror
+    lcd.setCursor(0,0);
+    lcd.print("Sensorerror => DHT22");
+    lcd.setCursor(0,1);
+    lcd.print(" no data avaliable  ");
+  }
 }
 
 void line0() //code for display line 1 temperatur
@@ -163,67 +225,6 @@ void line3()
   }
 }
 
-void lightState()
-{
-  phcValue_1 = digitalRead(photocell_1);
-  delay (500);
-  phcValue_2 = digitalRead(photocell_2);
-  phcValue = (phcValue_1+phcValue_2)/2;
-  if (!isnan(phcValue_1) || !isnan(phcValue_2))
-  {
-    if(phcValue >= 500)
-    {
-      light = true;
-    }
-    else
-    {
-      light = false;
-    }
-  }
-  else if(phcValue < 500)
-  {
-    light = true;
-  }
-  else
-  {
-    light = false;
-  }
-}
-
-void compareTempHumid()
-{
-  humid1 = dht.readHumidity();//set value for humidity on humid1
-  temp1 = dht.readTemperature();//set value for temperature on temp1
-  delay(5000);//wait 5 seconds to second measurement
-  humid2 = dht.readHumidity();//set value for humidity on humid2
-  temp2 = dht.readTemperature();//set value for temperature on temp2
-  
-  if (!isnan(temp1) || !isnan(humid1) || !isnan(temp2) || !isnan(humid2))
-  {
-    if(humid1 >= humid2/100*95 || humid1 <= humid2/100*105)
-    {
-      line0(); //code for display line 1 temperatur line 2 humidity
-      line1();
-    }
-    else
-    {
-      lcd.setCursor(0,0); //code for display line 1 temperatur line 2 humidity
-      lcd.print("DEVIATION > 5%!!!");
-      line0();
-      line1();
-    }
-  }
-  else
-  {
-    lcd.clear(); //code for display sensorerror
-    lcd.setCursor(0,0);
-    lcd.print("Sensorerror => DHT22");
-    lcd.setCursor(0,1);
-    lcd.print(" no data avaliable  ");
-  }
-  delay(2000);
-}
-
 void co2()
 {
   ppmValue1 = co2_1.getPPM();
@@ -233,7 +234,6 @@ void co2()
   {
     line2();
     line3();
-    delay(2000);
   }
 }
 
@@ -272,6 +272,7 @@ void relayK2Active()
   }
 }
 
+//<<=========================>>
 void loop()
 {
   lightState(); 
