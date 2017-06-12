@@ -1,5 +1,13 @@
 /*
-Code for messurement for DHT22 Sensor
+=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=
+>>>>> PLEASE READ <<<<<
+code for testing the DHT22 sensor
+its only for the sensor without a circuit board
+https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf
+=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=
+
+<<=====================================>>
+measurement for DHT22 Sensor
 used PIN A0, GND, VCC 5V
 Output signal:    single bus
 measuring range:  humidity 0-100% (+-2%)
@@ -10,75 +18,43 @@ PIN 1   connect to VCC port from 3.3-6.0VDC
 PIN 2   connect to DATA port + 1kOhm resistor to VCC port
 PIN 3   NULL
 PIN 4   connect to GND port
-
+<<=========================>>
 Author:   Fenriswolf
-Version:  V0.9 2017.05.21
+Version:  V1.0 2017.06.13 01:00 RELEASE VERSION
+<<=========================>>
 */
-
-//initalize library
-#include <Adafruit_Sensor.h> //Adafruit_Sensor-master.zip
-#include <DHT.h> //DHT22-04.zip
-
-//define readpin and module 
-#define DHTPIN A0 //set analog pin 0 to read data
-#define DHTTYPE DHT22 //
-
-//rename module to dht
+#include <Adafruit_Sensor.h>
+#include <DHT.h> // library for the sensor => found here https://github.com/fenriswolf78/CO2-control/blob/master/DHT22-04.zip 
+ 
+#define DHTPIN A0     
+#define DHTTYPE DHT22 // useable for DHT11, DHT21, DHT22 sensors
+ 
 DHT dht(DHTPIN, DHTTYPE);
-
-//variables
-float humid1 = 0;
-float temp1 = 0;
-float humid2 = 0;
-float temp2 = 0;
-
-void setup()
+ 
+void setup() 
 {
-  Serial.begin(9600);
+  Serial.begin(9600); 
+  Serial.println("DHT22 - Test!");
+ 
+  dht.begin();
 }
-
-void compareTempHumid()
+ 
+void loop() 
 {
-  humid1 = dht.readHumidity();//set value for humidity on humid1
-  temp1 = dht.readTemperature();//set value for temperature on temp1
-  delay(5000);//wait 5 seconds to second measurement
-  humid2 = dht.readHumidity();//set value for humidity on humid2
-  temp2 = dht.readTemperature();//set value for temperature on temp2
-  if (!isnan(temp1) || !isnan(humid1) || !isnan(temp2) || !isnan(humid2))
+  float h = dht.readHumidity();     // read humidity
+  float t = dht.readTemperature();  // read temperature
+  if (isnan(t) || isnan(h))         // check if the number is valuable if NaN then show a error message
   {
-    if(humid1 >= humid2/100*95 || humid1 <= humid2/100*105)
-    {
-      //here code for display line 1 temperatur line 2 humidity
-      //!!!actual code only for test!!!
-      Serial.print("Humidity: "); 
-      Serial.print((humid1+humid2)/2);
-      Serial.print(" %\t");
-      Serial.print("Temperature: "); 
-      Serial.print((temp1+temp2)/2);
-      Serial.println(" °C");
-    }
-    else
-    {
-      //here code for display line 1 temperatur line 2 humidity
-      //!!!actual code only for test!!!
-      Serial.print("ABWEICHUNG VON ÜBER 5%!!! ");
-      Serial.print("Humidity: "); 
-      Serial.print((humid1+humid2)/2);
-      Serial.print(" %\t");
-      Serial.print("Temperature: "); 
-      Serial.print((temp1+temp2)/2);
-      Serial.println(" °C");
-    }
-  }
+    Serial.println("not able to read the DHT22 sensor values");
+  } 
   else
   {
-    //here code for display line 1 temperatur line 2 humidity
-    Serial.println("Sensorerror => DHT22 was not able to deliver values");
+    Serial.print("humidity: "); 
+    Serial.print(h);
+    Serial.print(" %\t");
+    Serial.print("temperature: "); 
+    Serial.print(t);
+    Serial.println(" C");
+    delay(2000);
   }
-  delay(2000);
-}
-
-void loop()
-{
-    compareTempHumid();
 }
