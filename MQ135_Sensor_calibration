@@ -11,7 +11,7 @@ in a wood or on a meadow
 let the mq135 preheat the coil inside to get suitable values
 =!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=
 
-=========================================
+<<=====================================>>
 messurement for MQ135 Sensor
 used PIN A1, GND, VCC 5V
 Output signal:    analog or digital bus
@@ -23,7 +23,10 @@ PIN 1   VCC 5.0 VDC (-+0.1)
 PIN 2   GND
 PIN 3   Digital DATA
 PIN 4   Analog DATA (we use that)
-=========================================
+<<=====================================>>
+Author:   Fenriswolf
+Version:  V1.0 2017.06.13 00:43 RELEASE VERSION
+<<=====================================>>
 */
 
 #include <MQ135.h>
