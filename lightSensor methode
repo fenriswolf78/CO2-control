@@ -1,30 +1,52 @@
-int photocell_1 = 7; //set PIN 7 for the first photocell
-int photocell_2 = 8; //set PIN 8 for the first photocell
-int phcValue_1 = 0; //define photocell_1 value
-int phcValue_2 = 0; //define photocell_2 value
-int phcValue = 0; //define photocell value
-boolean light = false; //initalize and set boolean value for light off
+=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=
+>>>>> PLEASE READ <<<<<
+code for testing a photocell
+to get good values measure the resistance with and without light 
+to use the right ohm on the resistor
+=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=
+
+<<=========================>>
+Standard photocell
+used PIN 6, PIN 7
+PIN 1  connect to VCC 5V
+PIN 2 connect to DATA Port + 10kOhm resistor to GND port
+<<=====================================>>
+Author:   Fenriswolf
+Version:  V1.0 2017.06.13 00:43 RELEASE VERSION
+<<=====================================>>
+
+#define photocell 7    //rename digital pin 7 to photocell
+float phcValue = 0;    //define photocell value
+boolean light;         //initalize light
 
 void setup() {
   Serial.begin(9600);
-  pinMode(photocell_1 , INPUT); //define photocell_1 PIN as input 
-  pinMode(photocell_2 , INPUT); //define photocell_2 PIN as input
+  pinMode(photocell, INPUT); //define photocell PIN as input
 }
 
-void lightState()
+void lightState() // code for light yes or no
 {
-  phcValue_1 = digitalRead(photocell_1); //set phcValue_1
-  delay (500); //wait 0.5 seconds
-  phcValue_2 = digitalRead(photocell_2); //set phcValue_2
-  phcValue = (phcValue_1+phcValue_2)/2; //set phcValue 
-  if(phcValue >= 500) //if phcValue is bigger then 500 light is on else light is off
+  phcValue = digitalRead(photocell);
+  if (!isnan(phcValue))
   {
-    light = true;
+    if(phcValue >0)
+    {
+      light = true;
+      Serial.print("light is on");
+    }
+    else
+    {
+      light = false;
+      Serial.print("light is off");
+    }
   }
   else
   {
     light = false;
+    Serial.print("light is off");
+    Serial.print("Sensorerror NaN");
   }
+  
 }
 
 void loop() 
