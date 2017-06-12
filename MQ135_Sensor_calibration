@@ -1,0 +1,73 @@
+/*
+=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=
+>>>>> PLEASE READ <<<<<
+code for recalibrate the mq135 to co2 gas
+read the 'rzero' value in the serial monitor 
+and replace the #define RZERO xxxx.xx with the value
+to set the co2 rzero value to 407ppm.
+407ppm is the actual atmospheric value of co2
+in a unpoluted area likewise out of a town
+in a wood or on a meadow
+let the mq135 preheat the coil inside to get suitable values
+=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=
+
+=========================================
+messurement for MQ135 Sensor
+used PIN A1, GND, VCC 5V
+Output signal:    analog or digital bus
+measuring range:  10 - 2000ppm
+!!IMPORTANT 24 hours preheat time
+sensing period:   ~ 2 seconds
+Pins on module from left 
+PIN 1   VCC 5.0 VDC (-+0.1)
+PIN 2   GND
+PIN 3   Digital DATA
+PIN 4   Analog DATA (we use that)
+=========================================
+*/
+
+#include <MQ135.h>
+
+MQ135 co2 = MQ135 (A1);
+
+float rzeroMin;
+float rzeroMax;
+float ppm;
+
+void setup() {
+Serial.begin(9600);
+
+rzeroMin = 10000;
+rzeroMax = 0;
+}
+
+void co2Measurement()
+{
+  Serial.print("============ Sensor ============");
+  Serial.println();
+  float rzero = co2.getRZero();
+  if ( rzero > rzeroMax)
+  {
+    rzeroMax = rzero;
+  }
+  else if ( rzero < rzeroMin)
+  {
+    rzeroMin = rzero;
+  }
+  Serial.print("RZeroMin: ");
+  Serial.print(rzeroMin);
+  Serial.print(";    RZeroMax:");
+  Serial.print(rzeroMax);
+  Serial.print(";    RZero:");
+  Serial.print(rzero);
+  ppm = co2.getPPM();
+  Serial.print(";    PPM:");
+  Serial.print(ppm);
+  Serial.println();
+}
+
+void loop()
+{
+  co2Measurement();
+  delay(2000); // wait 2 seconds to allow the sensor to reload
+}
