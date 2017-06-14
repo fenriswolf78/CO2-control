@@ -1,8 +1,8 @@
 /*
 Code for:
 <<=========================>>
-2x Standard photocell
-used PIN 6, PIN 7
+Standard photocell
+used PIN 7
 PIN 1  connect to VCC 5V
 PIN 2 connect to DATA Port + 10kOhm resistor to GND port
 <<=========================>>
@@ -45,7 +45,7 @@ input signal: digital
 !! IMPORTANT MAX 10 AMPS on 230V side allowed !!
 <<=========================>>
 Author:   Fenriswolf
-Version:  V0.9 2017.06.12 13:23 TESTVERSION
+Version:  V0.9 2017.06.15 00:16 TESTVERSION
 <<=========================>>
 */
 
@@ -65,9 +65,9 @@ Version:  V0.9 2017.06.12 13:23 TESTVERSION
 #define k2 5 //relais2 ventilation rename digital pin 6 to k2
 
 // <<=== rename module to ===>>
-LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 20 chars and 4 line display
-DHT dht(DHTPIN, DHTTYPE); // set DHT22 name pin and type
-MQ135 co2 = MQ135 (MQ135PIN); // set name for mq135-module to co2
+LiquidCrystal_I2C lcd(0x27,20,4);  //set the LCD address to 0x27 for a 20 chars and 4 line display
+DHT dht(DHTPIN, DHTTYPE); //set DHT22 name pin and type
+MQ135 co2 = MQ135 (MQ135PIN); //set name for mq135-module to co2
 
 // <<=== variables ===>>
 float phcValue; //define photocell
@@ -86,52 +86,36 @@ void setup()
   Serial.begin(9600); 
   lcd.init(); //initialize the lcd
   pinMode(photocell, INPUT); //define photocell PIN as input
-  relayK1 = true; // set value k1 on true
-  relayK2 = true; // set value k2 on true => 
+  relayK1 = true; //set value k1 on true
+  relayK2 = true; //set value k2 on true => 
   pinMode(k1, OUTPUT); //define relay 1 PIN as output
   pinMode(k2, OUTPUT); //define relay 1 PIN as output
 }
 
-void line0() // code for display line 1 temperatur
+void line0() //code for display line 1 temperatur
 {
-  lcd.setCursor(0,0);
-  lcd.print("                    "); //clear line1
   lcd.setCursor(0,0); 
-  lcd.print("Temperature");
-  lcd.setCursor(14,0);
-  lcd.print(temp);
-  lcd.setCursor(18,0);
-  lcd.print(" C");
+  lcd.print("Temperature  " + (String)temp + " C");
 }
 
-void line1() // code for display line 2 humidity
+void line1() //code for display line 2 humidity
 {
   lcd.setCursor(0,1);
-  lcd.print("                    "); //clear line2
-  lcd.setCursor(0,1);
-  lcd.print("Humidity");
-  lcd.setCursor(14,1);
-  lcd.print(humid);
-  lcd.setCursor(18,1);
-  lcd.print(" %");
+  lcd.print("Humidity     " + (String)humid + " %");
 }
 
-void line2() // code for display line 3 co2 value in ppm
+void line2() //code for display line 3 co2 value in ppm
 {
   lcd.setCursor(0,2);
-  lcd.print("                    "); // clear line3
-  lcd.setCursor(0,2);
-  lcd.print("CO2 Value:");
-  lcd.setCursor(12,2);
-  lcd.print(ppmValue);
-  lcd.setCursor(17,2);
-  lcd.print("ppm");
+  lcd.print("CO2            ");
+  lcd.setCursor(8,2);
+  lcd.print((String)ppmValue + " ppm ");
 }
 
-void line3() // code for display line 3 relay status
+void line3() //code for display line 3 relay status
 {
   lcd.setCursor(0,3);
-  lcd.print("                    "); // clear line4
+  lcd.print("                    "); //clear line4
   lcd.setCursor(0,3);
   lcd.print("CO2 GAS ");
   lcd.setCursor(8,3);
@@ -156,9 +140,9 @@ void line3() // code for display line 3 relay status
   }
 }
 
-void lightState() // // code for light yes or no
+void lcdBacklight() //code for LCD Display backlight on or off
 {
-  phcValue = digitalRead(photocell);
+phcValue = digitalRead(photocell);
   if (!isnan(phcValue))
   {
     if(phcValue >0)
@@ -174,10 +158,6 @@ void lightState() // // code for light yes or no
   {
     light = false;
   }
-}
-
-void lcdBacklight() // code for LCD Display backlight on or off
-{
   if(light == true)
   {
     lcd.backlight();
@@ -188,18 +168,18 @@ void lcdBacklight() // code for LCD Display backlight on or off
   }
 }
 
-void TempHumid() // code for DHT22 module to read temperature and humidity
+void TempHumid() //code for DHT22 module to read temperature and humidity
 {
-  humid = dht.readHumidity();//set value for humidity on humid
-  temp = dht.readTemperature();//set value for temperature on temp
+  humid = dht.readHumidity(); //set value for humidity on humid
+  temp = dht.readTemperature(); //set value for temperature on temp
   if (!isnan(temp) || !isnan(humid))
   {
-    line0(); // goto code line0()
-    line1(); // goto code line1()
+    line0(); //goto code line0()
+    line1(); //goto code line1()
   }
   else
   {
-    lcd.clear(); // code for display sensorerror
+    lcd.clear(); //code for display sensorerror
     lcd.setCursor(0,0);
     lcd.print("Sensorerror => DHT22");
     lcd.setCursor(0,1);
@@ -207,7 +187,7 @@ void TempHumid() // code for DHT22 module to read temperature and humidity
   }
 }
 
-void co2Measurement() // code to set rzero and co2 value in ppm
+void co2Measurement() //code to set rzero and co2 value in ppm
 {
   float rzero = co2.getRZero();
   if ( rzero > rzeroMax)
@@ -219,10 +199,10 @@ void co2Measurement() // code to set rzero and co2 value in ppm
     rzeroMin = rzero;
   }
   ppmValue = co2.getPPM();
-  line2(); // goto code line2()
+  line2(); //goto code line2()
 }
 
-void relayK1Active() // code for relay k1 magentic valve settings and also partially relay k2 in some cases
+void relais() //code for relay k1 co2 and k2 ventilation settings
 {
   if(ppmValue >= 1950 || isnan(ppmValue)|| temp >= 60)
   {
@@ -231,52 +211,28 @@ void relayK1Active() // code for relay k1 magentic valve settings and also parti
     digitalWrite(k2, LOW);
     relayK2 = true;
   }
-  else if(ppmValue <= 500 && temp <= 40)
+  else if(ppmValue <= 410 && temp <= 40)
   {
     digitalWrite(k1, LOW);
     relayK1 = true;
     digitalWrite(k2, HIGH);
     relayK2 = false;
   }
-  else if(ppmValue >= 900 && temp <= 40)
+  else if(ppmValue >= 900 && temp <= 40 || isnan(temp))
   {
     digitalWrite(k1, HIGH);
     relayK1 = false;
     digitalWrite(k2, HIGH);
     relayK2 = false;
   }
-  line3(); // goto code line3()
-}
-
-void relayK2Active() // code for relay k2 ventilation settings
-{
-  if(temp >= 60)
-  {
-    digitalWrite(k1, HIGH);
-    relayK1 = false;
-    digitalWrite(k2, LOW);
-    relayK2 = true;
-  }
-  else if(isnan(temp))
-  {
-    digitalWrite(k2, HIGH);
-    relayK2 = false;
-  }
-  else if(temp <= 40)
-  {
-    digitalWrite(k2, HIGH);
-    relayK2 = false;
-  }
-  line3(); // goto code line3()
+  line3(); //goto code line3()
 }
 
 void loop()
 {
-  lightState(); 
   lcdBacklight();
   TempHumid();
   co2Measurement();
-  relayK1Active();
-  relayK2Active();
-  delay(30000); // delay 30 seconds 
+  relais();
+  delay(30000); //delay 30 seconds 
 }
