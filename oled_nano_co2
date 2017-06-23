@@ -1,0 +1,227 @@
+/*
+Code for:
+<<=========================>>
+Standard photocell
+used PIN A0
+PIN 1  connect to VCC 5V
+PIN 2 connect to DATA Port + 10kOhm resistor to GND port
+<<=========================>>
+measurement for DHT22 Sensor
+used PIN A1, GND, VCC 5V
+Output signal:    single bus
+measuring range:  humidity 0-100% (+-2%)
+                  temperature -40°C - 80°C (-+0.2°C)
+sensing period:   ~ 2 seconds
+Pins on module from left 
+PIN 1   connect to VCC port from 3.3-6.0VDC
+PIN 2   connect to DATA port + 1kOhm resistor to VCC port
+PIN 3   NULL
+PIN 4   connect to GND port
+<<=========================>>
+OLED-LCD display, 0.96", 128x64, I2C
+used PIN A4(SDA), PIN A5(SDC), GND, VCC 5V
+Pins on module from upon
+PIN 1   GND
+PIN 2   VCC 5.0 VDC (-+0.1)
+PIN 3   SDC (clock line)
+PIN 4   SDA (data line)
+<<=========================>>
+messurement for MQ135 Sensor with backup fuction
+used PIN A2, GND, VCC 5V
+Output signal:    analog or digital bus
+measuring range:  10 - 2000ppm
+!!IMPORTANT 24 hours preheat time
+sensing period:   ~ 2 seconds
+Pins on module from left 
+PIN 1   VCC 5.0 VDC (-+0.1)
+PIN 2   GND
+PIN 3   Digital DATA
+PIN 4   Analog DATA (we use that)
+<<=========================>>
+2x 5 V DC to 230V AC relais 
+Neuftech 2-CH 5V !! IMPORTANT low input = high output and vice versa !!
+used PIN 8, PIN 9, GND, VCC 5V 
+input signal: digital
+!! IMPORTANT MAX 10 AMPS on 230V side allowed !!
+<<=========================>>
+Author:   Fenriswolf
+Version:  V0.9 2017.06.15 00:16 TESTVERSION
+<<=========================>>
+*/
+
+// <<=== initalize library ===>>
+#include <Adafruit_Sensor.h> //Adafruit_Sensor-master.zip
+#include <DHT.h> //DHT22-04.zip
+#include <Wire.h> //I2C library
+#include <Arduino.h>
+#include <U8x8lib.h>
+#include <MQ135.h> //gas sensor library 
+
+#ifdef U8X8_HAVE_HW_SPI
+#include <SPI.h>
+#endif
+
+// <<=== define readpin and module ===>>
+#define photocell A0 //rename digital pin 7 to photocell
+#define DHTPIN A1 //set analog pin 0 to read data
+#define DHTTYPE DHT22 //we use a HDT22 wodule without board
+#define MQ135PIN A2 //set analog pin 1 to read data
+#define k1 8 //relais1 magnetic valve rename digital pin 6 to k1
+#define k2 9 //relais2 ventilation rename digital pin 6 to k2
+
+// <<=== initalize module / rename module to ===>>
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(SCL, SDA, U8X8_PIN_NONE); //OLED display without reset
+DHT dht(DHTPIN, DHTTYPE); //set DHT22 name pin and type
+MQ135 co2 = MQ135 (MQ135PIN); //set name for mq135-module to co2
+
+// <<=== variables ===>>
+float phcValue; //define photocell
+boolean light; //define first value for light on or off
+float humid; //initalize humidity measurement
+float temp; //initalize temperature measurement
+float rzeroMin; //initalize mq135 minimum
+float rzeroMax; //initalize mq135 maximum
+float ppmValue; //initalize ppm measurement
+boolean relayK1; //relay1 magnetic valve
+boolean relayK2; //relay2 ventilation
+int i; //increment variable for modulo and reset
+
+void setup()
+{
+  Serial.begin(9600); 
+  u8x8.begin();
+  u8x8.setPowerSave(0);
+  relayK1 = true; //set value k1 on true
+  relayK2 = true; //set value k2 on true
+  i = 0; //set value on increment variable 
+  u8x8.setFont(u8x8_font_chroma48medium8_r); //set font for display https://github.com/olikraus/u8g2/wiki/fntlist8x8 special thanks to olikraus
+  pinMode(k1, OUTPUT); //define relay 1 PIN as output
+  pinMode(k2, OUTPUT); //define relay 1 PIN as output
+}
+
+void readout() //display 6 lines 16 chars maximum
+{
+  if(i % 2 == 1) // invert displaymode to 
+  {
+    u8x8.setInverseFont(0);
+  }
+  else
+  {
+    u8x8.setInverseFont(1);
+  }
+  u8x8.setCursor(0,0); //code for display sensorerror
+  if (isnan(temp) || isnan(humid))
+  {
+    u8x8.print("  ERROR  DHT22  ");
+  }
+  else
+  {
+    u8x8.print("                "); 
+  }
+  u8x8.setCursor(0,1);
+  u8x8.print("CO2CONTROLSYSTEM");
+  u8x8.setCursor(0,2);
+  u8x8.print("TEMP     " + (String)temp + " C");
+  u8x8.setCursor(0,3);
+  u8x8.print("HUMID    " + (String)humid + " %");
+  u8x8.setCursor(0,4);
+  u8x8.print("CO2   " + (String)ppmValue + "PPM");
+  u8x8.setCursor(0,5);
+  u8x8.print("CO2 GASVALVE ");
+  u8x8.setCursor(12,5);
+  if(relayK1 == false)
+  {
+    u8x8.print("ON ");
+  }
+  else
+  {
+    u8x8.print("OFF");
+  }
+  u8x8.setCursor(0,6);
+  u8x8.print("VENTILATION  ");
+  if(relayK2 == false)
+  {
+    u8x8.print("ON ");
+  }
+  else
+  {
+    u8x8.print("OFF");
+  }
+  u8x8.setCursor(12,6);
+  i++;
+}
+
+void oledOnOff() //code for OLED Display active yes no
+{
+  phcValue = analogRead(photocell);
+  if (!isnan(phcValue))
+  {
+    if(phcValue > 100)
+    {
+      light = true;
+    }
+    else
+    {
+      light = false;
+    }
+  }
+  else
+  {
+    light = false;
+  }
+  if(light == true)
+  {
+    u8x8.setPowerSave(0);
+  }
+  else
+  {
+    u8x8.setPowerSave(1);
+  }
+}
+
+void TempHumid() //code for DHT22 module to read temperature and humidity
+{
+  humid = dht.readHumidity(); //set value for humidity on humid
+  temp = dht.readTemperature(); //set value for temperature on temp
+}
+
+void co2Measurement() //code to set co2 value in ppm
+{
+  ppmValue = co2.getPPM();
+}
+
+void relais() //code for relay k1 co2 and k2 ventilation settings
+{
+  if(ppmValue >= 1950 || isnan(ppmValue)|| temp >= 60)
+  {
+    digitalWrite(k1, HIGH);
+    relayK1 = false;
+    digitalWrite(k2, LOW);
+    relayK2 = true;
+  }
+  else if(ppmValue <= 410 && temp <= 40)
+  {
+    digitalWrite(k1, LOW);
+    relayK1 = true;
+    digitalWrite(k2, HIGH);
+    relayK2 = false;
+  }
+  else if(ppmValue >= 900 && temp <= 40 || isnan(temp))
+  {
+    digitalWrite(k1, HIGH);
+    relayK1 = false;
+    digitalWrite(k2, HIGH);
+    relayK2 = false;
+  }
+}
+
+void loop()
+{
+  delay(2000); //delay 2 seconds to refresh the sensors on startup
+  oledOnOff();
+  TempHumid();
+  co2Measurement();
+  relais();
+  readout();
+  delay(28000); //delay 28 seconds 
+}
