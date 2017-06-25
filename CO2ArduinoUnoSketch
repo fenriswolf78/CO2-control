@@ -1,7 +1,8 @@
 /*
 Code for:
+!!! all PINS from left to right !!!
 <<=========================>>
-Standard photocell => used PIN A0
+Standard photosensor => used PIN A0
   PIN 1  connect to VCC 5V
   PIN 2 connect to DATA Port + 10kOhm resistor to GND port
 <<=========================>>
@@ -10,14 +11,12 @@ Output signal:    single bus
 measuring range:  humidity 0-100% (+-2%)
                   temperature -40°C - 80°C (-+0.2°C)
 sensing period:   ~ 2 seconds
-Pins on module from left 
   PIN 1   connect to VCC port from 3.3-6.0VDC
   PIN 2   connect to DATA port + 1kOhm resistor to VCC port
   PIN 3   NULL
   PIN 4   connect to GND port
 <<=========================>>
 the 4 lines 20 cols LCD Display from Sunfounder.com => used PIN A4(SDA), PIN A5(SDC), GND, VCC 5V
-Pins on module from upon
   PIN 1   GND
   PIN 2   VCC 5.0 VDC (-+0.1)
   PIN 3   SDA (data line)
@@ -26,22 +25,34 @@ Pins on module from upon
 messurement for MQ135 Sensor with backup fuction => used PIN A2, GND, VCC 5V
 Output signal:    analog or digital bus
 measuring range:  10 - 2000ppm
-!!IMPORTANT 24 hours preheat time
+!!IMPORTANT 24 hours preheat time before first use
+!!IMPORTANT calibration code in project actual #define RZERO 2494.75 for 407ppm
+!!
 sensing period:   ~ 2 seconds
-Pins on module from left 
   PIN 1   VCC 5.0 VDC (-+0.1)
   PIN 2   GND
   PIN 3   Digital DATA
   PIN 4   Analog DATA (we use that)
 <<=========================>>
-2x 5 V DC to 230V AC relais 
+2x 5 V DC to 230V AC relais => used PIN 8, PIN 9, GND, VCC 5V 
 Neuftech 2-CH 5V !! IMPORTANT low input = high output and vice versa !!
-used PIN 8, PIN 9, GND, VCC 5V 
 input signal: digital
 !! IMPORTANT MAX 10 AMPS on 230V side allowed !!
+INPUT:
+  PIN 1   GND
+  PIN 2   Relay 1 in
+  PIN 3   Relay 2 in
+  PIN 4   VCC 5.0 VDC (-+0.1)
+OUTPUT
+  PIN 1   LOW out
+  PIN 2   230 V max 10 Amps
+  PIN 3   HIGH out
+  PIN 4   LOW out
+  PIN 5   230V max 10 Amps
+  PIN 6   HIGH out
 <<=========================>>
 Author:   Fenriswolf
-Version:  V0.9 2017.06.24 18:06 TESTVERSION
+Version:  V1.0 2017.06.25 17:30 RELEASEVERSION
 <<=========================>>
 */
 
@@ -50,10 +61,10 @@ Version:  V0.9 2017.06.24 18:06 TESTVERSION
 #include <DHT.h> //DHT22-04.zip
 #include <Wire.h> //I2C library
 #include <LiquidCrystal_I2C.h> //LCD library
-#include <MQ135.h> //gas sensor library
+#include <MQ135.h> //gas sensor library !!! calibrate the MQ135 code in the project avaliable !!!
 
 // <<=== define readpin and module ===>>
-#define photocell A0 //rename digital pin 7 to photocell
+#define photocell A0 //rename analog pin 0 to photosensor
 #define k1 8 //relais1 magnetic valve rename digital pin 6 to k1
 #define k2 9 //relais2 ventilation rename digital pin 6 to k2
 
@@ -63,7 +74,7 @@ DHT dht(A1, DHT22); //set DHT22 name pin and type
 MQ135 co2 = MQ135 (A2); //set name for mq135-module to co2
 
 // <<=== variables ===>>
-float phcValue; //define photocell
+float phcValue; //define photosensor
 boolean light; //define first value for light on or off
 float humid; //initalize humidity measurement
 float temp; //initalize temperature measurement
@@ -79,38 +90,40 @@ void setup()
   pinMode(k2, OUTPUT); //define relay 1 PIN as output
 }
 
-void readout()
+void readout() //code to show the values and errors on the display
 {
-  lcd.clear(); 
-  if (isnan(temp) || isnan(humid)) //code for display sensorerror
+  if (isnan(temp) || isnan(humid)) //code to display sensorerror DHT22
   {
     lcd.setCursor(0,0);
-    lcd.print("Sensorerror => DHT22");
+    lcd.print("SENSORERROR => DHT22");
     lcd.setCursor(0,1);
-    lcd.print(" no data avaliable  ");
-    
+    lcd.print("                    ");
   }
   else
   {
-    lcd.setCursor(0,0); 
+    lcd.setCursor(0,0); //line 1
     lcd.print("Temperature  " + (String)temp + " C");
-    lcd.setCursor(0,1);
+    lcd.setCursor(0,1); //line 
     lcd.print("Humidity     " + (String)humid + " %");
-    /*!!! following code only for test in serial monitor!!!
-      Serial.print("Humidity:  + (String)humid + " %t");
-      Serial.print("Temperature: " + (String)temp1+temp2 + " °C");
-    */
   }
-  lcd.setCursor(0,2);
-  lcd.print("CO2            ");
-  lcd.setCursor(8,2);
-  lcd.print((String)ppmValue + " ppm ");
-  lcd.setCursor(0,3);
-  lcd.print("                    "); //clear line4
-  lcd.setCursor(0,3);
-  lcd.print("CO2 GAS ");
+  //----------------
+  if(isnan(ppmValue) || ppmValue > 30000) //code to display sensorerror MQ135
+  {
+    lcd.setCursor(0,2);
+    lcd.print("SENSORERROR => MQ135");
+  }
+  else
+  {
+    lcd.setCursor(0,2); //line 3
+    lcd.print("CO2              ppm");
+    lcd.setCursor(8,2);
+    lcd.print((String)ppmValue);
+  }
+  lcd.setCursor(0,3); //line 4
+  lcd.print("CO2 GAS     Vent    ");
   lcd.setCursor(8,3);
-  if(relayK1 == false)
+  //----------------
+  if(relayK1 == false) //code to display relay 1 status
   {
     lcd.print("OFF");
   }
@@ -118,10 +131,9 @@ void readout()
   {
     lcd.print("ON");
   }
-  lcd.setCursor(12,3);
-  lcd.print("Vent");
   lcd.setCursor(17,3);
-  if(relayK2 == false)
+  //----------------
+  if(relayK2 == false) //code to display relay 2 status
   {
     lcd.print("OFF");
   }
@@ -129,27 +141,69 @@ void readout()
   {
     lcd.print("ON");
   }
+  //----------------
+  //space for more relaisstatus
+/*
+  //!!! following code only for test in serial monitor !!!
+  //to use it delete '/*' and '/*'
+  Serial.println("╔=========================╗");
+  if (isnan(temp) || isnan(humid))
+  {
+    Serial.println("║  SENSORERROR  =>  DHT22 ║ ");
+  }
+  else
+  {
+    Serial.println("║ Temperature:  " + (String)temp + "  °C ║");
+    Serial.println("║ Humidity:     " + (String)humid + "   % ║");  
+  }
+  if (isnan(ppmValue) || ppmValue > 30000)
+  {
+    Serial.println("║ SENSORERROR  =>  MQ135 ║");
+  }
+  else
+  {
+    Serial.println("║ CO² Value:   " + (String)ppmValue + " PPM ║");
+  }
+  if(light == true)
+  {
+    Serial.println("║ Light:               ON ║");
+  }
+  else
+  {
+    Serial.println("║ Light:               OFF ║");
+  }
+  if(relayK1 == true)
+  {
+    Serial.println("║ CO² Valve:           ON ║");
+  }
+  else
+  {
+    Serial.println("║ CO² Valve:          OFF ║");
+  }
+  if(relayK2 == true)
+  {
+    Serial.println("║ Ventilation:         ON ║");
+  }
+  else
+  {
+    Serial.println("║ Ventilation:        OFF ║");
+  }
+  Serial.println("╚=========================╝");
+*/
 }
 
 void lcdBacklight() //code for LCD Display backlight on or off
 {
-  phcValue = analogRead(photocell);
-  if (!isnan(phcValue))
+  phcValue = analogRead(photocell); //get photosensor value
+  if(phcValue > 100) //if value is above 100 set boolean true else set boolean false
   {
-    if(phcValue > 100)
-    {
-      light = true;
-    }
-    else
-    {
-      light = false;
-    }
+    light = true;
   }
-  else
+  else if (phcValue < 100 || !isnan(phcValue))
   {
     light = false;
   }
-  if(light == true)
+  if(light == true) //activate/deactivate LCD backlight
   {
     lcd.backlight();
   }
@@ -159,101 +213,50 @@ void lcdBacklight() //code for LCD Display backlight on or off
   }
 }
 
-void tempHumid()
+void TempHumid() //code for DHT22 module to read temperature and humidity
 {
-  humid = dht.readHumidity();//set value for humidity on humid
-  temp = dht.readTemperature();//set value for temperature on temp
+  humid = dht.readHumidity(); //set value for humidity on humid
+  temp = dht.readTemperature(); //set value for temperature on temp
 }
 
-void co2()
+void co2Measurement() //code to set co2 value in ppm
 {
-  ppmValue1 = co2_1.getPPM();
-  ppmValue2 = co2_2.getPPM();
-  ppmValue = (ppmValue1 + ppmValue2)/2;
-  if(ppmValue1 >= ppmValue2*0.95 || ppmValue1 <= ppmValue2*1.05)
-  {
-    line2();
-    line3();
-    
-  }
+  ppmValue = co2.getPPM();
 }
 
-void relayK1Active()
+void relais() //code for relay k1 co2 and relay k2 temperature settings
 {
-  if(ppmValue >= 1950 || isnan(ppmValue)|| temp >= 60)
-  {
-    relayK1 = false;
-    relayK2 = true;
-
+  if(ppmValue >= 1200 || isnan(ppmValue)) //co2 relay k1
+  { //if ppm value is above/equal 1200 or ppm is not avaliable deactivate gas valve
+    relayK1 = false; 
+    digitalWrite(k1, HIGH); // HIGH / LOW depends on the relais
   }
-  else if(ppmValue <= 400 && temp <= 40)
-  {
+  else if(ppmValue > 0 && ppmValue < 650)
+  { //if ppm value is between 0 - 650 activate gas valve
     relayK1 = true;
-    relayK2 = false;
-    
+    digitalWrite(k1, LOW);// HIGH / LOW depends on the relais
   }
-  else if(ppmValue >= 900 && temp <= 40)
+  //----------------------
+  if(temp >= 27 || ppmValue >= 4000 && ppmValue < 30000) //ventilation relay k2
   {
-    relayK1 = false;
-    relayK2 = false;
-    
+    relayK2 = true;
+    digitalWrite(k2, LOW);// HIGH / LOW depends on the relais
   }
+  else if(temp < 27 || isnan(temp) || ppmValue < 4000)
+  { //if temperature is below 27 °C or ppm value is below 4000
+    relayK2 = false;
+    digitalWrite(k2, HIGH);// HIGH / LOW depends on the relais
+  }
+  //-------------------------
+  // space for more relais
 }
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print(ppmValue);
-  Serial.print("ppm DANGER  valve:   ");
-  Serial.println("OFF");*/
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print("Sensorerror => DHT22 no data avaliable  ");
-/*
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print(ppmValue);
-  Serial.print("°C   valve:   ");
-  Serial.println("OFF");
-*/
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print("Humidity:  + (String)humid + " %t");
-  Serial.print("Temperature: " + (String)temp1+temp2 + " °C");
-*/
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print("CO2_1: " + (String)ppmValue1);
-  Serial.print(" CO2mix: ");
-  delay(2000);
-/*
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print(ppmValue);
-  Serial.print("ppm   valve:   ");
-  Serial.println("ON");
-*/
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print(temp);
-  Serial.print("°C temp too high  valve:   ");
-  Serial.println("ON");
-*/
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print(temp);
-  Serial.print("°C   valve:   ");
-  Serial.println("OFF");
-*/
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print(ppmValue + "ppm   valve:   " + "OFF");
-*/
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print("Humidity:  + (String)humid + " %t");
-  Serial.print("Temperature: " + (String)temp1+temp2 + " °C");
-*/
-/*
-  !!! following code only for test in serial monitor!!!
-  Serial.print("CO2: " + (String)ppmValue);
-  delay(2000);
-/*
+
+void loop()
+{
+  lcdBacklight();
+  TempHumid();
+  co2Measurement();
+  relais();
+  readout();
+  delay(30000); //delay 28 seconds 
+}
