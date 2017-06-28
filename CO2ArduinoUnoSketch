@@ -92,7 +92,7 @@ void setup()
 
 void readout() //code to show the values and errors on the display
 {
-  if (isnan(temp) || isnan(humid)) //code to display sensorerror DHT22
+  if (isnan(temp) || isnan(humid) || (temp > -40 && temp < 80)) //code to display sensorerror DHT22
   {
     lcd.setCursor(0,0);
     lcd.print("SENSORERROR => DHT22");
