@@ -8,7 +8,7 @@ https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf
 
 <<=====================================>>
 measurement for DHT22 Sensor
-used PIN A0, GND, VCC 5V
+used PIN A1, GND, VCC 5V
 Output signal:    single bus
 measuring range:  humidity 0-100% (+-2%)
                   temperature -40°C - 80°C (-+0.2°C)
@@ -20,13 +20,13 @@ PIN 3   NULL
 PIN 4   connect to GND port
 <<=========================>>
 Author:   Fenriswolf
-Version:  V1.0 2017.06.13 01:00 RELEASE VERSION
+Version:  V1.0 2017.06.29 02:32 RELEASE VERSION
 <<=========================>>
 */
 #include <Adafruit_Sensor.h>
 #include <DHT.h> // library for the sensor => found here https://github.com/fenriswolf78/CO2-control/blob/master/DHT22-04.zip 
  
-#define DHTPIN A0     
+#define DHTPIN A1    
 #define DHTTYPE DHT22 // useable for DHT11, DHT21, DHT22 sensors
  
 DHT dht(DHTPIN, DHTTYPE);
@@ -41,20 +41,16 @@ void setup()
  
 void loop() 
 {
-  float h = dht.readHumidity();     // read humidity
-  float t = dht.readTemperature();  // read temperature
-  if (isnan(t) || isnan(h))         // check if the number is valuable if NaN then show a error message
+  float humid = dht.readHumidity();     // read humidity
+  float temp = dht.readTemperature();  // read temperature
+  if (isnan(t) || isnan(h) || (temp > -40 && temp < 80))         // check if the number is valuable if NaN then show a error message
   {
     Serial.println("not able to read the DHT22 sensor values");
   } 
   else
   {
-    Serial.print("humidity: "); 
-    Serial.print(h);
-    Serial.print(" %\t");
-    Serial.print("temperature: "); 
-    Serial.print(t);
-    Serial.println(" C");
+    Serial.println("humidity: " + (String)humid + " %\t");
+    Serial.println("temperature: " + (String)temp + " C");
     delay(2000);
   }
 }
