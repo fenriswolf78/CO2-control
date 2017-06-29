@@ -52,7 +52,7 @@ OUTPUT
   PIN 6   HIGH out
 <<=========================>>
 Author:   Fenriswolf
-Version:  V1.0 2017.06.25 17:30 RELEASEVERSION
+Version:  V1.0 2017.06.29 02:22 RELEASEVERSION
 <<=========================>>
 */
 
@@ -224,7 +224,7 @@ void co2Measurement() //code to set co2 value in ppm
   ppmValue = co2.getPPM();
 }
 
-void relais() //code for relay k1 co2 and relay k2 temperature settings
+void relais() //code for relay k1 co2 and relay k2 ventilation settings
 {
   if(ppmValue >= 1200 || isnan(ppmValue)) //co2 relay k1
   { //if ppm value is above/equal 1200 or ppm is not avaliable deactivate gas valve
@@ -234,19 +234,19 @@ void relais() //code for relay k1 co2 and relay k2 temperature settings
   else if(ppmValue > 0 && ppmValue < 650)
   { //if ppm value is between 0 - 650 activate gas valve
     relayK1 = true;
-    digitalWrite(k1, LOW);// HIGH / LOW depends on the relais
+    digitalWrite(k1, LOW); // HIGH / LOW depends on the relais
   }
   //----------------------
-  if(temp >= 27 || ppmValue >= 4000 && ppmValue < 30000) //ventilation relay k2
-  {
-    relayK2 = true;
-    digitalWrite(k2, LOW);// HIGH / LOW depends on the relais
-  }
-  else if(temp < 27 || isnan(temp) || ppmValue < 4000)
+  if(temp < 27 || ppmValue < 4000 || isnan(temp))
   { //if temperature is below 27 °C or ppm value is below 4000
     relayK2 = false;
-    digitalWrite(k2, HIGH);// HIGH / LOW depends on the relais
+    digitalWrite(k2, HIGH); // HIGH / LOW depends on the relais
   }
+  else if(temp >= 27 || (ppmValue >= 4000 && ppmValue < 30000)) //ventilation relay k2
+  {
+    relayK2 = true;
+    digitalWrite(k2, LOW); // HIGH / LOW depends on the relais
+  } 
   //-------------------------
   // space for more relais
 }
