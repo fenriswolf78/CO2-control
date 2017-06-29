@@ -7,7 +7,7 @@ to use the right ohm on the resistor
 
 <<=========================>>
 Standard photocell
-used PIN 6, PIN 7
+used PIN A0
 PIN 1  connect to VCC 5V
 PIN 2 connect to DATA Port + 10kOhm resistor to GND port
 <<=====================================>>
@@ -15,38 +15,34 @@ Author:   Fenriswolf
 Version:  V1.0 2017.06.13 00:43 RELEASE VERSION
 <<=====================================>>
 
-#define photocell 7    //rename digital pin 7 to photocell
+#define photocell A0    //rename analog pin 0 to photocell
 float phcValue = 0;    //define photocell value
 boolean light;         //initalize light
 
-void setup() {
+void setup() 
+{
   Serial.begin(9600);
-  pinMode(photocell, INPUT); //define photocell PIN as input
 }
 
 void lightState() // code for light yes or no
 {
-  phcValue = digitalRead(photocell);
-  if (!isnan(phcValue))
+  phcValue = analogRead(photocell); //get photosensor value
+  if(phcValue > 100) //if value is above 100 set boolean true else set boolean false
   {
-    if(phcValue >0)
-    {
-      light = true;
-      Serial.print("light is on");
-    }
-    else
-    {
-      light = false;
-      Serial.print("light is off");
-    }
+    light = true;
+  }
+  else if (phcValue < 100 || !isnan(phcValue))
+  {
+    light = false;
+  }
+  if(light == true) //activate/deactivate LCD backlight
+  {
+    Serial.print("light is on");
   }
   else
   {
-    light = false;
     Serial.print("light is off");
-    Serial.print("Sensorerror NaN");
   }
-  
 }
 
 void loop() 
